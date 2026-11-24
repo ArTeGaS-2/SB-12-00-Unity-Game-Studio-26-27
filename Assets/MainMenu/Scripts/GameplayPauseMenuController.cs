@@ -42,6 +42,8 @@ public sealed partial class GameplayPauseMenuController : MonoBehaviour
     float brightness;
     float musicVolume;
     bool fullscreen;
+    InventoryUI inventory;
+    public bool BlocksGameplayInput => paused || leaving;
     bool paused;
     bool leaving;
 
@@ -50,6 +52,7 @@ public sealed partial class GameplayPauseMenuController : MonoBehaviour
         Application.runInBackground = true;
         uiFont = Resources.Load<Font>("Fonts/RobotoMono-Regular") ?? Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         gameplayAmbient = RenderSettings.ambientLight;
+        inventory = GetComponentInChildren<InventoryUI>(true);
         EnsureCamera();
         EnsureEventSystem();
         LoadSettings();
@@ -63,7 +66,9 @@ public sealed partial class GameplayPauseMenuController : MonoBehaviour
         AnimatePause();
         if (leaving || !Input.GetKeyDown(KeyCode.Escape)) return;
 
-        if (settingsPage != null && settingsPage.activeSelf)
+        if (!paused && inventory != null && inventory.IsOpen)
+            inventory.CloseInventory();
+        else if (settingsPage != null && settingsPage.activeSelf)
             ShowPausePage();
         else
             SetPaused(!paused);
@@ -238,6 +243,7 @@ public sealed partial class GameplayPauseMenuController : MonoBehaviour
         if (leaving || paused==value) return;
         if(value)
         {
+            if (inventory != null && inventory.IsOpen) inventory.CloseInventory();
             resumeTimeScale=Time.timeScale;resumeAudioPause=AudioListener.pause;
             resumeCursorLock=Cursor.lockState;resumeCursorVisible=Cursor.visible;
             Cursor.lockState=CursorLockMode.None;Cursor.visible=true;
